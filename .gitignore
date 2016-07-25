@@ -1,0 +1,21 @@
+# anwhere
+*~
+
+# in the root directory
+bayes_lm_arma
+bayes_lm_arma_no_timer
+bayes_lm_eigen
+bayes_lm_eigen_no_timer
+Check_Valid_Input.R
+Misc
+Output
+Rcpp_Examples
+.Rhistory
+
+# in the writeup directory
+auto
+Writeup/Bayes_LM_Writeup*
+!Writeup/Bayes_LM_Writeup.Rnw
+!Writeup/Bayes_LM_Writeup.pdf
+cache
+
