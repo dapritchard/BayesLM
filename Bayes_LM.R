@@ -215,7 +215,7 @@ bayes_lm_r <- function(n                = 100L,
         cat("\n")
     }
 
-    c(inverse  = elapsed_inv,
-      sampling = elapsed_samp,
-      overall  = elapsed_overall)
+    c(inverse = elapsed_inv,
+      mvnsamp = elapsed_samp,
+      overall = elapsed_overall)
 }

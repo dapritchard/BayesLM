@@ -1,5 +1,6 @@
 # anwhere
 *~
+*.o
 
 # in the root directory
 bayes_lm_arma

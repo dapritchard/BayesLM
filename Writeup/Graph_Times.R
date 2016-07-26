@@ -1,119 +1,109 @@
 
 library(calibrate)
 library(magrittr)
-
-xvals <- 1:5
+expression(paste("Plot of ", alpha^beta, " versus ", hat(mu)[0])))
+xvals <- 1:3
 xlab <- "Data size"
-ylab <- "log2 time in secs"
+ylab <- expression(paste(log[2], " time in secs"))
 titlemain <- "Graph as p increases"
 titlevec <- c("inv time", "mvn time", "sampler time", "total time")
 colorvec <- c("red", "blue", "green", "purple", "orange")
 
-tinv <- lapply(1:5, function(x) rnorm(5) + x)
-tmvn <- tsam <- ttot <- tinv
 
 
-graph_times <- function(ctime, xvals, xlab, ylab, titlevec, titlemain, colorvec) {
 
-    time_graph <- function(x, ylist, xlab, ylab, title_nm, colorvec) {
 
-        expand_lim <- function(lim_vals, prop_expand) {
-            expand_by <- (lim_vals[2] - lim_vals[1]) * prop_expand / 2
-            c(lim_vals[1] - expand_by, lim_vals[2] + expand_by)
-        }
-
-        allvals <- unlist(ylist)
-        xlim <- c(min(x), max(x)) %>% expand_lim(., 0.25)
-        ylim <- c(min(allvals), max(allvals)) %>% expand_lim(., 0.1)
-
-        plot(-100, xlim=xlim, main=title_nm, ylim=ylim, xlab=xlab, ylab=ylab)
-        for (i in 1:length(ylist)) {
-            lines(x, ylist[[i]], type="b", pch=20, col=colorvec[i])
-            sani_labels <- format(round(ylist[[i]], 2), nsmall=2)
-            calibrate::textxy(X      = x,
-                              Y      = ylist[[i]],
-                              lab    = sani_labels,
-                              m      = c(mean(xlim), mean(ylim)),
-                              cex    = 1,
-                              offset = 0.75,
-                              col    = colorvec[i])
-        }
-    }
-
-    par(oma=c(0, 0, 3, 0), las=1, family="serif")
-    par(las=1)
-    layout(matrix(1:9, nrow=3, ncol=3, byrow=TRUE),
-          widths = c(0.475, .015, .475),
-          heights = c(0.475, .05, .475))
-
-    # 1, 1
-    par(mar=c(4, 4, 1.5, 0.1))
-    time_graph(xvals, ctime$inv, xlab, ylab, titlevec[1], colorvec)
-
-    # 2, 1
-    par(mar=rep(0, 4))
-    frame()
-
-    # 3, 1
-    par(mar=c(4, 4, 1.5, 0.1))
-    time_graph(xvals, ctime$mvn, xlab, ylab, titlevec[2], colorvec)
-
-    # 1, 2 / 2, 2 / 3, 2
-    par(mar=rep(0, 4))
-    frame()
-    frame()
-    frame()
-
-    # 1, 3
-    par(mar=c(4, 4, 1.5, 0.1))
-    time_graph(xvals, ctime$sam, xlab, ylab, titlevec[3], colorvec)
-
-    # 2, 3
-    par(mar=rep(0, 4))
-    frame()
-
-    # 3, 3
-    par(mar=c(4, 4, 1.5, 0.1))
-    time_graph(xvals, ctime$tot, xlab, ylab, titlevec[4], colorvec)
-
-    mtext(titlemain, outer=TRUE, cex = 1.25, padj=-1)
+# Expands graph boundaries by (100 * prop_expand)%
+expand_lim <- function(lim_vals, prop_expand) {
+    expand_by <- (lim_vals[2L] - lim_vals[1L]) * prop_expand / 2
+    c(lim_vals[1L] - expand_by, lim_vals[2L] + expand_by)
 }
 
 
 
+graph_time_type <- function(time_dat, xvals, type_nm, xlab_nm, ylab_nm, title_nm, colorvec) {
 
-transform_times <- function(time_list) {
-    library(magrittr)
+    # Restrict data to the time type of interest
+    time_type_dat <- subset(time_dat, time_type == type_nm)
+    program_nm <- unique(time_type_dat$program)
 
-    # Set up list structure.  The first level is the time being measured.
-    retlist <- setNames(vector("list", 4), c("inv", "mvn", "tot", "sam"))
+    # Calculate graph boundaries
+    allvals <- time_type_dat$time
+    xlim <- c(min(xvals), max(xvals)) %>% expand_lim(., 0.25)
+    ylim <- c(min(allvals), max(allvals)) %>% expand_lim(., 0.1)
 
-    # Second level of list is the function / program being used
-    for (k in 1:4) {
-        retlist[[ k ]] <- setNames(vector("list", 5),
-                               c("ronly", "arma", "eigen", "rcpp_arma", "rcpp_eigen"))
+    # Plot without any points
+    plot(-100, xlim=xlim, ylim=ylim, xlab=xlab_nm, ylab=ylab_nm, main=title_nm)
 
-        # Third level of list is the elapsed times as the data changes
-        for (i in 1:5) {
-            retlist[[ k ]][[ i ]] <- vector("numeric", 5)
-        }
+    # Each iteration draws the lines for one program
+    for (i in seq_along(program_nm)) {
+
+        # Plot the lines for program_nm[i]
+        yvals <- time_type_dat$time[ time_type_dat$program == program_nm[i] ]
+        lines(xvals, yvals, type="b", pch=20, col=colorvec[i])
+
+        # Add points to the lines
+        y_fmt <- format(round(yvals, 2), nsmall=2)
+        calibrate::textxy(X      = xvals,
+                          Y      = yvals,
+                          lab    = y_fmt,
+                          m      = c(mean(xlim), mean(ylim)),
+                          cex    = 1,
+                          offset = 0.75,
+                          col    = colorvec[i])
     }
+}
 
-    # i steps through the function / program being used
-    for (i in 1:5) {
 
-        # j steps through the size of the data being used
-        for (j in 1:5) {
 
-            # k steps through the type of time being measured
-            for (k in 1:3) {
-                retlist[[ k ]][[ i ]][ j ] <- time_list[[ i ]][[ j ]][ k, ] %>% mean %>% log2
-            }
-            retlist[[ 4 ]][[ i ]][[ j ]] <- ( time_list[[ i ]][[ j ]][ 3, ] -
-                                          time_list[[ i ]][[ j ]][ 1, ] -
-                                          time_list[[ i ]][[ j ]][ 2, ] ) %>% mean %>% log2
-        }
-    }
+graph_times <- function(time_obs, xvals, xlab_nm, ylab_nm, titlevec, titlemain, colorvec) {
 
-    retlist
+    # Set up the layout of the graph
+    par(oma=c(0, 0, 3, 0), las=1, family="serif")
+    layout(matrix(1:9, nrow=3, ncol=3, byrow=TRUE),
+           widths = c(0.475, .015, .475),
+           heights = c(0.475, .05, .475))
+
+    # Margins for each plot
+    margin_vals <- c(4.1, 4, 1.5, 0.1)
+    zerovec <- rep(0, 4)
+
+    # 1, 1
+    par(mar=margin_vals)
+    graph_time_type(time_obs, xvals, "inverse", xlab_nm, ylab_nm, titlevec[1L], colorvec)
+
+    # 1, 2
+    par(mar=zerovec)
+    frame()
+
+    # 1, 3
+    par(mar=margin_vals)
+    graph_time_type(time_obs, xvals, "mvnsamp", xlab_nm, ylab_nm, titlevec[2L], colorvec)
+
+    # 2, 1
+    par(mar=zerovec)
+    frame()
+
+    # 2, 2
+    plot(-100, -100, bty="n", xlim=c(0, 1), ylim=c(0, 1), axes=FALSE, xlab=NULL)
+    legend(x=-1.35, y=2.5, legend=c("R only", "Armadillo", "Eigen"),  lty=c(1, 1, 1),
+           lwd=c(1, 1, 1), col=colorvec[c(1, 2, 3)], xpd=NA, box.lwd=0.5)
+
+    # 2, 3
+    par(mar=zerovec)
+    frame()
+
+    # 3, 1
+    par(mar=margin_vals)
+    graph_time_type(time_obs, xvals, "mat_ops", xlab_nm, ylab_nm, titlevec[3L], colorvec)
+
+    # 3, 2
+    par(mar=zerovec)
+    frame()
+
+    # 3, 3
+    par(mar=margin_vals)
+    graph_time_type(time_obs, xvals, "total", xlab_nm, ylab_nm, titlevec[4L], colorvec)
+
+    mtext(titlemain, outer=TRUE, cex = 1.25, padj=-1)
 }

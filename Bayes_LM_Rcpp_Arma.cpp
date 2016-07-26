@@ -258,6 +258,6 @@ Rcpp::NumericVector bayes_lm_rcpp_arma_(int n,
 
     // Return computational time 
     return Rcpp::NumericVector::create(Rcpp::Named("inverse")  = elapsed[INVERSE],
-    				       Rcpp::Named("sampling") = elapsed[SAMP_NORM],
+    				       Rcpp::Named("mvnsamp") = elapsed[SAMP_NORM],
     				       Rcpp::Named("overall")  = elapsed[OVERALL]);
 }
