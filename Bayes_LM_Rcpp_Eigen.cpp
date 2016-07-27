@@ -122,11 +122,12 @@ Rcpp::NumericVector bayes_lm_rcpp_eigen_(int n,
     shapeval      = (nu_0 + n) / 2;
 
 
-    // Sampler loop ----------------------------------------
+    // Sampler object initialization -----------------------
 
     Eigen::MatrixXd V;     // variance of current beta sample
     Eigen::VectorXd m;     // mean of current beta sample
     Eigen::VectorXd err;   // model error, i.e. y - X \beta
+    Eigen::MatrixXd iden;  // storing matrix identity
     double SSR;            // SSR (sum of squared errors)
     double scaleval;       // scale parameter for gamma distribution samples
     double* bcurr;         // beta current data location
@@ -156,17 +157,24 @@ Rcpp::NumericVector bayes_lm_rcpp_eigen_(int n,
 	samples_file.open(samples_file_loc[0].begin(), std::fstream::app);
     }
 
-    // Clock timer objects and initialization; requires POSIX system
-    CLOCK_START(OVERALL);
-
     // Initial value for gamma
     gamma = 1;
+
+    // Initialize identity matrix
+    iden.setIdentity(p, p);
+
+
+    // Sampler loop ----------------------------------------
+
+    // Clock timer objects and initialization; requires POSIX system
+    CLOCK_START(OVERALL);
 
     for (int s = 0; s < nsamp; s++) {
 	
 	// Sample beta
 	CLOCK_START(INVERSE)
-	    V = (Sigma_inv_0 + (gamma * tXX)).inverse();
+	    // Leverage the fact that we have a p.d. matrix to obtain inverse
+	    V = (Sigma_inv_0 + (gamma * tXX)).llt().solve(iden);
 	CLOCK_STOP(INVERSE);
 	m = gamma * V * tXy;
 	CLOCK_START(SAMP_NORM)
@@ -175,8 +183,7 @@ Rcpp::NumericVector bayes_lm_rcpp_eigen_(int n,
 
 	// Sample gamma
 	err = y - (X * beta);
-	// root_SSR = norm(err);
-	SSR = err.dot(err);
+	SSR = err.squaredNorm();
 	scaleval = 2 / (nu_sigma_sq_0 + SSR);
 	gamma = R::rgamma(shapeval, scaleval);
 
@@ -249,8 +256,8 @@ Rcpp::NumericVector bayes_lm_rcpp_eigen_(int n,
 		    << "decomp_method:  " << decomp_method << "\n";
 
 	// Set printing of fields to be a fixed format with precision 4
-	std::cout.setf(std::ios::fixed, std::ios::floatfield);
-	std::cout.precision(4);
+	Rcpp::Rcout.setf(std::ios::fixed, std::ios::floatfield);
+	Rcpp::Rcout.precision(4);
 
 	Rcpp::Rcout << "\n"
 		    << "Elapsed time:\n"
@@ -259,14 +266,18 @@ Rcpp::NumericVector bayes_lm_rcpp_eigen_(int n,
 		    << "Sampling normal:  " << elapsed[SAMP_NORM] << "\n"
 		    << "Overall:          " << elapsed[OVERALL] << "\n"
 		    << "\n";
+
+	// Set printing of matrices
+	Eigen::IOFormat matprint(4, 0, "  ", "\n", "  ", "", "", "");
+	Eigen::IOFormat gamprint(4, 0, "   ", "\n", "   ", "", "", "");
 	
-	Rcpp::Rcout << " true beta       2.5%        50%      97.5%\n"
+	Rcpp::Rcout << "true beta     2.5%     50%     97.5%\n"
 		    << "-------------------------------------------\n"
-		    << table_beta_quant << "\n"
+		    << table_beta_quant.format(matprint) << "\n"
 		    << "\n"
-		    << "true gam 2.5%        50%      97.5%\n"
+		    << " true gam     2.5%     50%     97.5%\n"
 		    << "-----------------------------------\n"
-		    << table_gamma_quant << "\n"
+		    << table_gamma_quant.format(gamprint) << "\n"
 		    << "\n";
     }
   

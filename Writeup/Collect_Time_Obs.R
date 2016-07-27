@@ -1,11 +1,4 @@
 
-source("Bayes_LM.R")
-source("Bayes_LM_Rcpp_Arma.R")
-source("Bayes_LM_Rcpp_Eigen.R")
-
-
-
-
 # Collects time observations for various functions and levels of n, p, nsamp,
 # and decomposition method.  fcn_nm_vec is a character vector of function names
 # corresponding to functions to call. nvec and pvec are numeric vectors of equal
