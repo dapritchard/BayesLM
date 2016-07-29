@@ -272,11 +272,11 @@ Rcpp::NumericVector bayes_lm_rcpp_eigen_(int n,
 	Eigen::IOFormat gamprint(4, 0, "   ", "\n", "   ", "", "", "");
 	
 	Rcpp::Rcout << "true beta     2.5%     50%     97.5%\n"
-		    << "-------------------------------------------\n"
+		    << "------------------------------------\n"
 		    << table_beta_quant.format(matprint) << "\n"
 		    << "\n"
 		    << " true gam     2.5%     50%     97.5%\n"
-		    << "-----------------------------------\n"
+		    << "------------------------------------\n"
 		    << table_gamma_quant.format(gamprint) << "\n"
 		    << "\n";
     }

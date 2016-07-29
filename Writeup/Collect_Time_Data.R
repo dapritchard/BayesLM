@@ -84,7 +84,9 @@ format_time_data <- function(time_data) {
                            time_type = time_type,
                            n         = n,
                            p         = p,
-                           time      = time_vals)
+                           time      = log2(time_vals),
+                           # options
+                           stringsAsFactors=FALSE)
 
     # Sort data.frame by program and time_type
     time_type <- factor(time_type, c("inverse", "mvnsamp", "mat_ops", "total"))

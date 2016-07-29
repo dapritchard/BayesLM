@@ -274,11 +274,12 @@ int main(int argc, char* argv[]) {
     shapeval      = (nu_0 + n) / 2;
 
 
-    // Sampler loop ----------------------------------------
+    // Sampler object initialization -----------------------
 
     Eigen::MatrixXd V;     // variance of current beta sample
     Eigen::VectorXd m;     // mean of current beta sample
     Eigen::VectorXd err;   // model error, i.e. y - X \beta
+    Eigen::MatrixXd iden;  // storing matrix identity
     double SSR;            // SSR (sum of squared errors)
     double scaleval;       // scale parameter for gamma distribution samples
 
@@ -306,17 +307,24 @@ int main(int argc, char* argv[]) {
 	samples_file.open(samples_file_loc, std::fstream::app);
     }
 
-    // Clock timer objects and initialization; requires POSIX system
-    CLOCK_START(OVERALL);
-
     // Initial value for gamma
     gamma = 1;
+
+    // Initialize identity matrix
+    iden.setIdentity(p, p);
+
+
+    // Sampler loop ----------------------------------------
+
+    // Clock timer objects and initialization; requires POSIX system
+    CLOCK_START(OVERALL);
 
     for (int s = 0; s < nsamp; s++) {
 	
 	// Sample beta
 	CLOCK_START(INVERSE)
-	    V = (Sigma_inv_0 + (gamma * tXX)).inverse();
+	    // Leverage the fact that we have a p.d. matrix to obtain inverse
+	    V = (Sigma_inv_0 + (gamma * tXX)).llt().solve(iden);
 	CLOCK_STOP(INVERSE);
 	m = gamma * V * tXy;
 	CLOCK_START(SAMP_NORM)
@@ -407,14 +415,18 @@ int main(int argc, char* argv[]) {
 		  << "Sampling normal:  " << elapsed[SAMP_NORM] << "\n"
 		  << "Overall:          " << elapsed[OVERALL] << "\n"
 		  << "\n";
+
+	// Set printing of matrices
+	Eigen::IOFormat matprint(4, 0, " ", "\n", " ", "", "", "");
+	Eigen::IOFormat gamprint(4, 0, "   ", "\n", "   ", "", "", "");
 	
-	std::cout << " true beta       2.5%        50%      97.5%\n"
-		  << "-------------------------------------------\n"
-		  << table_beta_quant << "\n"
+	std::cout << "true beta     2.5%     50%     97.5%\n"
+		  << "------------------------------------\n"
+		  << table_beta_quant.format(matprint) << "\n"
 		  << "\n"
-		  << "true gam 2.5%        50%      97.5%\n"
-		  << "-----------------------------------\n"
-		  << table_gamma_quant << "\n"
+		  << " true gam     2.5%     50%     97.5%\n"
+		  << "------------------------------------\n"
+		  << table_gamma_quant.format(gamprint) << "\n"
 		  << "\n";
     }
 
