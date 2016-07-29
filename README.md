@@ -6,7 +6,7 @@ libraries `Armadillo` and `Eigen`, and then to interface the `C++` code from `R`
 via `Rcpp`. The main purpose of this exercise was to obtain some familiarity
 with these libraries and packages.  Additionally I am also interested in
 comparing the speeds of the implementations for this problem and practicing
-profiling techniques using the software.  
+profiling techniques on the software.  
 
 A more detailed explanation of the functions / programs found in this repository
 can be found at `Writeup/Bayes_LM_Writeup.pdf`. The file also displays my
@@ -14,7 +14,7 @@ findings and experiences in terms of speed comparisons and program profiling.
 
 The root directory contains the following files:
 
-1. `bayes_lm_r`: an `R`-only implementation (an `R` function)
+1. `bayes_lm_r`: an `R` function
     * `Bayes_LM.R`
     * `Check_Valid_Input.R`
 	
@@ -38,3 +38,4 @@ The root directory contains the following files:
     * `Check_Valid_Input.R`
     * `Stats_Fcns_Eigen.cpp`
 
+![n increases](Writeup/figure/n_increase.pdf "Title")

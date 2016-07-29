@@ -8,6 +8,7 @@
 \usepackage{enumitem}
 \usepackage{titlesec}             % \titlespacing
 \usepackage[hidelinks]{hyperref}  % appropriate page numbers for viewer
+\usepackage{booktabs}
 
 
 
@@ -15,11 +16,35 @@
 \newcommand{\normal}{\mathcal{N}}
 \newcommand{\ssr}{\text{SSR}}
 
-\newcommand{\lmr}{\textbf{\texttt{bayes\_lm\_r}}}
-\newcommand{\lmarma}{\textbf{\texttt{bayes\_lm\_arma}}}
-\newcommand{\lmeigen}{\textbf{\texttt{bayes\_lm\_eigen:}}}
-\newcommand{\lmrcpparma}{\textbf{\texttt{bayes\_lm\_rcpp\_arma}}}
-\newcommand{\lmrcppeigen}{\textbf{\texttt{bayes\_lm\_rcpp\_eigen}}}
+
+% Typsetting package names
+% \newcommand{\pkg}[1]{{\normalfont\fontseries{b}\selectfont #1}}
+\newcommand{\pkg}[1]{\textsf{#1}}
+
+%\newcommand{\lmr}{\textbf{\texttt{bayes\_lm\_r}}}
+\def\lmr/{\textbf{\texttt{bayes\_lm\_r}}}
+% \newcommand{\lmarma}{\textbf{\texttt{bayes\_lm\_arma}}}
+\def\lmarma/{\textbf{\texttt{bayes\_lm\_arma}}}
+% \newcommand{\lmeigen}{\textbf{\texttt{bayes\_lm\_eigen:}}}
+\def\lmeigen/{\textbf{\texttt{bayes\_lm\_eigen}}}
+% \newcommand{\lmrcpparma}{\textbf{\texttt{bayes\_lm\_rcpp\_arma}}}
+\def\lmrcpparma/{\textbf{\texttt{bayes\_lm\_rcpp\_arma}}}
+% \newcommand{\lmrcppeigen}{\textbf{\texttt{bayes\_lm\_rcpp\_eigen}}}
+\def\lmrcppeigen/{\textbf{\texttt{bayes\_lm\_rcpp\_eigen}}}
+
+% \def\arma/{\pkg{Armadillo}}
+% \def\eigen/{\eigen/}
+% \def\blas/{\pgk{BLAS}}
+% \def\lapack/{\pkg{LAPACK}}
+% \def\atlas/{\pkg{ATLAS}}
+% \def\openblas/{\pkg{OpenBLAS}}
+
+\def\arma/{\pkg{Armadillo}}
+\def\eigen/{\pkg{Eigen}}
+\def\blas/{\pkg{BLAS}}
+\def\lapack/{\pkg{LAPACK}}
+\def\atlas/{\pkg{ATLAS}}
+\def\openblas/{\pkg{OpenBLAS}}
 
 % Spacing before/after sections and subsections
 \titlespacing*{\section}
@@ -28,15 +53,13 @@
 {0pt}{7.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
 
 % Typesetting "C++"
-\newcommand{\cpp}[1]{C\nolinebreak\hspace{-.05em}\raisebox{.4ex}{\tiny\bf +}\nolinebreak\hspace{-.10em}\raisebox{.4ex}{\tiny\bf +} #1}
+% \newcommand{\cpp}[1]{C\nolinebreak\hspace{-.05em}\raisebox{.4ex}{\tiny\bf +}\nolinebreak\hspace{-.10em}\raisebox{.4ex}{\tiny\bf +} #1}
 % \def\cpp{{C\nolinebreak[4]\hspace{-.05em}\raisebox{.4ex}{\tiny\bf ++}}}
+\def\cpp/{C\nolinebreak\hspace{-.05em}\raisebox{.4ex}{\tiny\bf +}\nolinebreak\hspace{-.10em}\raisebox{.4ex}{\tiny\bf +}}
 
 % Typesetting "R"
-\newcommand{\R}[1]{\textsf{R} #1}
+\def\R/{\textsf{R}}
 
-% Typsetting package names
-% \newcommand{\pkg}[1]{{\normalfont\fontseries{b}\selectfont #1}}
-\newcommand{\pkg}[1]{\textsf{#1}}
 \newcommand{\sbar}{\,|\,}
 
 
@@ -66,7 +89,7 @@ pct <- function(x) { round(100 * x) }
   {\scshape\LARGE A case study in the implementation of a Bayesian linear model
     using \textsf{R} and / or C++ libraries \par}
   \vspace{1cm}
-  {\scshape\Large A comparison \par}
+  {\scshape\Large Speed comparison, profiling \par}
   % \vspace{1.5cm}
   % {\huge\bfseries Pigeons love doves\par}
   \vspace{2cm}
@@ -79,15 +102,15 @@ pct <- function(x) { round(100 * x) }
 
 \setcounter{section}{-1}
 \section{Introduction}
-As an exercise I decided to implement a Bayesian linear model using the \cpp
-libraries \pkg{Armadillo} and \pkg{Eigen}, and then to interface the \cpp code
-from \R via \pkg{Rcpp}.  The main purposes of this exercise were, as one might
+As an exercise I decided to implement a Bayesian linear model using the \cpp/
+libraries \arma/ and \eigen/, and then to interface the \cpp/ code
+from \R/ via \pkg{Rcpp}.  The main purposes of this exercise were, as one might
 guess from the choice of exercise, to obtain some familiarity with
-\pkg{Armadillo}, \pkg{Eigen}, and \pkg{Rcpp}.
+\arma/, \eigen/, and \pkg{Rcpp}.
 
 The reason for choosing the Bayesian linear model as the algorithm that I would
 try to implement was that (i) at the time of writing this I have a Gibbs sampler
-in hand that I wish to code in \cpp so the skills learned here will be
+in hand that I wish to code in \cpp/ so the skills learned here will be
 applicable to that problem, and (ii) this particular Gibbs sampler is a very
 simple algorithm so that consequently the comparison of the implementations in
 terms of speed is also relatively simple. \vspace{4mm}
@@ -96,9 +119,9 @@ terms of speed is also relatively simple. \vspace{4mm}
 doing the exercise.  Some of these included:
 \begin{itemize}
   \item Comparison of the speeds of the algorithm implementations
-  \item Practice profiling programs in \R and in \cpp
   \item Compare the speeds of using various implementations of \pkg{BLAS} and
     \pkg{LAPACK}
+  \item Practice profiling programs in \R/ and in \cpp/
 \end{itemize}
 
 
@@ -107,22 +130,27 @@ doing the exercise.  Some of these included:
 \subsection{Computer specifications}
 
 The speed and profiling results presented in the document below will be highly
-dependent on the computing environment on which they were obtained.  If they are
-run on your computer then the may well tell a different story - and if you are
-interested enough to read this then it might well be worth finding out!
+dependent on the computing environment on which they were obtained.  A short
+summary of the specifications of the computing environment for which the results
+in this document were obtained are listed below:
 
-The specifications of the computing environment for which the results in this
-document were obtained are shown below.  In short, this computer is an Intel i3
-64-bit processor with 2 hyper-threaded cores and 4 GB of main memory runing
-Ubuntu Linux 14.04.
+\begin{itemize}
+\item Intel i3 64-bit processor
+\item 2 hyper-threaded cores
+\item 4 GB of main memory
+\item 32 KB L1 cache
+\item 256 KB L2 cache
+\item 3 MB L3 cache
+\item Ubuntu Linux 14.04 system
+\end{itemize}
 
 % Print the computer hardware specs
-<<hardware-specs, engine="bash", size="footnotesize">>=
+<<hardware-specs, engine="bash", size="footnotesize", include=FALSE>>=
 sudo lshw -short
 @
 
 % Print the system specs
-<<system-specs, engine="bash", size="footnotesize">>=
+<<system-specs, engine="bash", size="footnotesize", include=FALSE>>=
 cat /etc/*release
 @
 
@@ -185,47 +213,47 @@ distribution $p( \vec{\beta}, \sigma^2 \sbar \vec{y}, \vec{X} )$ can be obtained
 
 % I wrote a total of five implementations of the Bayesian linear model described in section \ref{sec: model def}.  In brief, the implementations were as follows:
 % \begin{itemize}
-% \item An \R-only version
-% \item A \cpp-only version using the \pkg{Armadillo} library
-% \item A \cpp-only version using the \pkg{Eigen} library
-% \item An \R function that calls a \cpp function (\pkg{Armadillo} version) via \pkg{Rcpp}
-% \item An \R function that calls a \cpp function (\pkg{Eigen} version) via \pkg{Rcpp}
+% \item An \R/-only version
+% \item A \cpp/-only version using the \pkg{Armadillo} library
+% \item A \cpp/-only version using the \eigen/ library
+% \item An \R/ function that calls a \cpp/ function (\pkg{Armadillo} version) via \pkg{Rcpp}
+% \item An \R/ function that calls a \cpp/ function (\eigen/ version) via \pkg{Rcpp}
 % \end{itemize}
 
-The source code for the following \R functions / executable programs is
-contained in the directory ********.  The name of each function / program is
-listed as well as the files for each containing the source code.  Note that some
-of the files are used for more than one implementation.
+The source code for the following \R/ functions / executable programs is
+contained in the root directory.  The name of each function / program is listed
+as well as the files for each containing the source code.  Note that some of the
+files are used for more than one implementation.
 
 \begin{enumerate}[leftmargin=*]
-\item \textbf{\texttt{bayes\_lm\_r:}} an \R-only implementation (an \R function)
+\item \textbf{\texttt{bayes\_lm\_r:}} an \R/ function
   \begin{itemize}
   \item \texttt{Bayes\_LM.R}
   \item \texttt{Check\_Valid\_Input.R}
   \end{itemize}
-\item \textbf{\texttt{bayes\_lm\_arma:}} a \cpp-only implementation using the
-  \pkg{Armadillo} library (an executable)
+\item \textbf{\texttt{bayes\_lm\_arma:}} a \cpp/-only implementation using the
+  \arma/ library (an executable)
   \begin{itemize}
   \item \texttt{Bayes\_LM\_Arma.cpp}
   \item \texttt{Parse\_Args.cpp}
   \item \texttt{Stats\_Fcns\_Arma.cpp}
   \end{itemize}
-\item \textbf{\texttt{bayes\_lm\_eigen:}} a \cpp-only implementation using the
-  \pkg{Eigen} library (an executable)
+\item \textbf{\texttt{bayes\_lm\_eigen:}} a \cpp/-only implementation using the
+  \eigen/ library (an executable)
   \begin{itemize}
   \item \texttt{Bayes\_LM\_Eigen.R}
   \item \texttt{Parse\_Args.cpp}
   \item \texttt{Stats\_Fcns\_Eigen.cpp}
   \end{itemize}
-\item \textbf{\texttt{bayes\_lm\_rcpp\_arma:}} an \R function internally calling
-  a workhorse \cpp function constructed using the \pkg{Armadillo} library
+\item \textbf{\texttt{bayes\_lm\_rcpp\_arma:}} an \R/ function internally calling
+  a workhorse \cpp/ function constructed using the \arma/ library
   \begin{itemize}
   \item \texttt{Bayes\_LM\_Rcpp\_Arma.R}
   \item \texttt{Check\_Valid\_Input.R}
   \item \texttt{Stats\_Fcns\_Arma.cpp}
   \end{itemize}
-\item \textbf{\texttt{bayes\_lm\_rcpp\_eigen:}} an \R function internally
-  calling a workhorse \cpp function constructed using the \pkg{Eigen} library
+\item \textbf{\texttt{bayes\_lm\_rcpp\_eigen:}} an \R/ function internally
+  calling a workhorse \cpp/ function constructed using the \eigen/ library
   \begin{itemize}
   \item \texttt{Bayes\_LM\_Rcpp\_Eigen.R}
   \item \texttt{Check\_Valid\_Input.R}
@@ -236,9 +264,10 @@ of the files are used for more than one implementation.
 
 
 
-\subsection{Writing \lmr}
+\subsection{Writing \lmr/}
 
-The function signature for \lmr is the following:
+The function signature for \lmr/ is shown in the following.  The interfaces to
+each of the other functions / programs is similar.
 
 <<lmr-function-signature, eval=FALSE>>=
 bayes_lm_r <- function(n                = 100L,
@@ -274,7 +303,7 @@ variance $\sigma^2 I$ where $\sigma$ is specified by \texttt{true\_sigma}.
 
 A Gibbs sampler with \texttt{nsamp} scans is then performed.  If specified by
 \texttt{print\_stats} then upon completion, a summary of the sample quantiles
-will be written to the \R console, and if specified by \texttt{write\_samples}
+will be written to the \R/ console, and if specified by \texttt{write\_samples}
 then each sample will be written to a file with filename as specified by
 \texttt{samples\_file\_loc}.
 
@@ -289,7 +318,7 @@ the total time spent in the sampler (i) performing matrix inversions (ii)
 sampling from the multivariate normal distribution.  The algorithm requires one
 execution of each task per scan.
 
-\lmr returns a length-3 vector with values providing the time in the sampler
+\lmr/ returns a length-3 vector with values providing the time in the sampler
 spent performing the inversion, the multivariate normal sampling, and the
 overall time in the sampler.  Note that this overall time includes only the
 sampler and not any computations performed before or after.
@@ -298,17 +327,45 @@ sampler and not any computations performed before or after.
 
 This is quite a simple model to code (the model was chosen for this reason!).
 Outside of checking the function arguments for validity, the function spans
-about 150 lines of code, including comments and blank lines!  \R provides all of
+about 150 lines of code, including comments and blank lines!  \R/ provides all of
 the tools we need for this particular program and makes life very nice and
 simple for us.
 
 
+\subsection{Writing \lmarma/}
 
-\subsection{Writing \lmarma}
+To invoke run the Bayesian linear model sampler using a \cpp/-only version now
+of course is done from the command-line.  To obtain the default parameter
+specifications (i.e. the specifications obtained by invoking
+<<arma-noargs, engine="bash", eval=FALSE>>=
+./bayes_lm_arma
+@
+\noindent one could explicitely specify each parameter by
+<<arma-defargs, engine="bash", eval=FALSE>>=
+./bayes_lm_arma -n=100  \
+                -p=15  \
+                -prop_nonzero=0.2  \
+                -true_beta_sd=2  \
+                -sd_x=2  \
+                -nsamp=1000  \
+                -print_stats=false  \
+                -write_ctime=false  \
+                -ctime_file_loc=Comp_Time_Arma.dat  \
+                -write_samples=false  \
+                -samples_file_loc=Samples_Arma.dat  \
+                -decomp_method=c  \
+                -set_seed=22
+@
+
+\noindent Actually, if left unspecified the seed is generating using the CPU
+clock so there isn't really a default - that way running the program without
+specifiying a seed generates a different sequence every time.  The number 22 was
+arbitrarily chosen here as an example.
+
 
 \subsubsection{Overall impression}
 
-This was my first exposure to the \pkg{Armadillo} library.  I found it to be
+This was my first exposure to the \arma/ library.  I found it to be
 very intuitive and convenient to work with.  The documentation was relatively
 clear and helpful.  If I could offer one suggestion for room for improvement
 regarding the documentation, I wish that it would provide a little more detail
@@ -317,58 +374,57 @@ functionality.
 
 \subsubsection{Choosing a random number generating method}
 
-One decision that has to be made when constructing a sampler in \cpp is how to
+One decision that has to be made when constructing a sampler in \cpp/ is how to
 generate the random numbers.  While there are several options, such as GNU's
-random number generation (RNG) library, or the \cpp 11 library, I ended up using
-\R's RNG library for the following reasons: (i) I am very familiar with the \R
-RNG interface, and (ii) we are not allowed to make use of the system RNG for \R
-packages submitted to CRAN (which disqualifies the GNU and \cpp 11 libraries).
+random number generation (RNG) library, or the \cpp/ 11 library, I ended up using
+\R/'s RNG library for the following reasons: (i) I am very familiar with the \R/
+RNG interface, and (ii) we are not allowed to make use of the system RNG for \R/
+packages submitted to CRAN (which disqualifies the GNU and \cpp/ 11 libraries).
 The available options and merits of the available RNG libraries is a topic which
 I will have to investigate in more detail in future, however.
 
-\subsubsection{Converting from \R code to  \texttt{C++}}
+\subsubsection{Converting from \R/ code to   \texttt{C++}}
 
-Now that we're not in the friendly confines of the \R programming environment,
+Now that we're not in the friendly confines of the \R/ programming environment,
 there was some additional work that needed to be performed to achieve the same
 functionality.
 
 \begin{enumerate}[leftmargin=*]
-\item The \pkg{Armadillo} library provides a method to randomly populate a
+\item The \arma/ library provides a method to randomly populate a
   matrix with independent standard normal entries, however it does not provide a
   method to sample from an arbitrary multivariate normal distibution.
   Consequently I had to write a multivariate normal sampling function - I wrote
   one using the Cholesky decomposition, and one using the Eigen decompostion.
   Each of these functions required just a few lines of code.
 
-\item I also had to construct a quantile function (\pkg{Armadillo} provides a
+\item I also had to construct a quantile function (\arma/ provides a
   median quantile method, but not for arbitrary quantiles).  I just emulated the
-  default quantile function from \R; this required about a dozen lines of code.
+  default quantile function from \R/; this required about a dozen lines of code.
 
-\item Another change that was required going from \R to \cpp was reading in
-  the function arguments.  In \R all of the work that is performed parsing the
-  function arguments is taken care of for me by \R; in \cpp we have to do a
+\item Another change that was required going from \R/ to \cpp/ was reading in
+  the function arguments.  In \R/ all of the work that is performed parsing the
+  function arguments is taken care of for me by \R/; in \cpp/ we have to do a
   little more manual work to read the function arguments (by arguments here I
   mean command-line arguments).  Of course there are some extremely powerful
   tools provided by the C standard, so thankfully we don't have to do much work
   from scratch.  However there are still some mundane tasks that need to be
   performed when parsing the arguments - this required about 150 lines of code.
-  In comparison the \R code that I wrote for argument checking was about 75
+  In comparison the \R/ code that I wrote for argument checking was about 75
   lines.
 
-\item One thing that confused me about using the \R math library for random
+\item One thing that confused me about using the \R/ math library for random
   number generation was how to properly set up the random number stream and set
   the seed of the stream.  In the \emph{Writing R Extensions} manual section
   6.3, it says that all calls to RNG routines should be prefaced by a call to
   \texttt{GetRNGstate()}, and that after all the required variates have been
-  generated, \texttt{GetRNGstate()} should be called.  However as far as I can
-  tell, when using the \R math library as a standalone library, the random
-  number stream is automatically set up for you, and that setting the seed is
-  accomplished through \texttt{set\_seed} (declared in \texttt{Rmath.h}).
-  However, I have not been able to find any documentation that specifically
-  addresses this point.
+  generated, \texttt{GetRNGstate()} should be called.  However, when using the
+  \R/ math library as a standalone library, the random number stream is
+  automatically set up for you, and that setting the seed is accomplished
+  through \texttt{set\_seed} (declared in \texttt{Rmath.h}).  See the
+  \emph{Writing R Extensions} manual section 6.16 for more dpetails.
 \end{enumerate}
 
-\subsubsection{Compiling \texttt{C++} code with \pkg{Armadillo}} \label{sec: compiling with arma}
+\subsubsection{Compiling \texttt{C++} code with \arma/} \label{sec: compiling with arma}
 
 The source code can be compiled as follows.
 <<compiling-arma, engine="bash", eval=FALSE>>=
@@ -385,36 +441,36 @@ defines the MATHLIB\_STANDALONE macro which in turn configures the
 problematic constructs, \texttt{-g3} includes debugging information in the
 resulting binary file, and \texttt{-O3} requests optimization from the compiler
 (note that this optimization flag is very important for heavily templated code
-such as the \pkg{Armadillo} and \pkg{Eigen} libraries).  The arguments
+such as the \arma/ and \eigen/ libraries).  The arguments
 \pkg{-lRmath} and \pkg{-larmadillo} tell the compiler the link the files against
-the \R math library and \pkg{Armadillo} library, respectively.  The argument
+the \R/ math library and \arma/ library, respectively.  The argument
 \texttt{-o bayes\_lm\_arma} specifies the filename of the resulting executable.
 
 
 
-\subsection{Writing \lmeigen}
+\subsection{Writing \lmeigen/}
 
 \subsubsection{Overall impression}
 
-This was the second time that I had any exposure to \pkg{Eigen}.  I find it also
+This was the second time that I had any exposure to \eigen/.  I find it also
 to be quite intuitive and convenient to work with.  I thought the documentation
 was well-developed and quite thorough.  If I had to mention one area that I
 found a little not to my taste, it was that many of the classes and methods had
 very verbose names (e.g. \texttt{transpose()} vs. \texttt{t()}).
 
-\subsubsection{Converting \pkg{Armadillo} code to \pkg{Eigen}}
+\subsubsection{Converting \arma/ code to \eigen/}
 
-Converting \pkg{Armadillo} to \pkg{Eigen} was quite straightforward; in many
+Converting \arma/ to \eigen/ was quite straightforward; in many
 places I just had to change e.g. \texttt{arma::mat} to \texttt{Eigen::MatrixXd}.
 There were a few differences, however.
 
 \begin{enumerate}[leftmargin=*]
-\item \pkg{Eigen} does not have a method to randomly populate a matrix with
+\item \eigen/ does not have a method to randomly populate a matrix with
   independent standard normal entries, so I had to create one; this requires
   just a handful of lines of code.
 
 \item The easy way to calculate the empirical quantiles of the samples is to
-  sort the data beforehand.  As opposed to \pkg{Armadillo}, there was not a
+  sort the data beforehand.  As opposed to \arma/, there was not a
   method for sorting the rows or columns of a matrix, so this requires just
   bringing in e.g. \texttt{qsort} or \texttt{std::sort}.
 
@@ -423,14 +479,14 @@ There were a few differences, however.
   for obtaining the $k$-th largest item in a set.  However in the interests of
   (the programmer's) time and simplicity, I just performed a total sort.
 
-\item As far as I could tell, there wasn't a built-in matrix inverse method that
-  leveraged the fact that the matrix that we are inverting is a symmetric
-  postive-definite matrix.  One could presumably construct one in just a few
-  lines - however I did not take the time to do so.
+\item There wasn't a built-in matrix inverse method that leveraged the fact that
+  the matrix that we are inverting is a symmetric postive-definite matrix.
+  Instead, this required me to use the \texttt{solve} method for the Cholesky
+  decomposition.
 \end{enumerate}
 
 
-\subsubsection{Compiling \texttt{C++} code with \pkg{Eigen}}
+\subsubsection{Compiling \texttt{C++} code with \eigen/}
 
 The source code can be compiled as follows.
 <<compiling-eigen, engine="bash", eval=FALSE>>=
@@ -441,311 +497,119 @@ g++ Bayes_LM_Eigen.cpp Parse_Args.cpp Stats_Fcns_Eigen.cpp  \
 
 \noindent All of the options here have been previously discussed in section
 \ref{sec: compiling with arma}.  It is worth noting however, that for
-\pkg{Eigen} (as apposed to \pkg{Armadillo}) we do not link it against a shared
+\eigen/ (as apposed to \arma/) we do not link it against a shared
 library, instead it is statically linked as part of the compilation process.
 
 
-\subsection{Writing \lmrcpparma}
+\subsection{Writing \lmrcpparma/}
 
 \subsubsection{Overall impression}
 
 This was my first time using \pkg{Rcpp}.  It is incredible how convenient it makes it to
-interface \cpp code from \R.
+interface \cpp/ code from \R/.
 
-\subsubsection{Interfacing \pkg{Armadillo} code through \texttt{R}} \label{sec: rcpp arma}
+\subsubsection{Interfacing \arma/ code through \texttt{R}} \label{sec: rcpp arma}
 
 Essentially all of the pieces were already written at this point, and it was
-just a matter of putting them all together.  Now that we are back in \R-land,
-I'd prefer and am able to do the argument checking in \R again.  So the
+just a matter of putting them all together.  Now that we are back in \R/-land,
+I'd prefer and am able to do the argument checking in \R/ again.  So the
 user-facing function simply checks the function arguments for validity and does
-any necessary preprocessing, and then calls an \R function pointing to a
-function in the dynamically loaded library constructed from the \cpp code,
-supplying it with the now sanitized data.  The \cpp function pointed to by the
+any necessary preprocessing, and then calls an \R/ function pointing to a
+function in the dynamically loaded library constructed from the \cpp/ code,
+supplying it with the now sanitized data.  The \cpp/ function pointed to by the
 caller is a thin wrapper constructed by \pkg{Rcpp}, which takes all of the
-\texttt{SEXP} pointers passed to it from \R and creates \texttt{Rcpp:RObject}s
-from them, and in turn calls our \cpp function, providing these
+\texttt{SEXP} pointers passed to it from \R/ and creates \texttt{Rcpp:RObject}s
+from them, and in turn calls our \cpp/ function, providing these
 \texttt{Rcpp:RObject} objects as the arguments. \vspace{4mm}
 
 \noindent To put all of the pieces together then mainly required:
 \begin{enumerate}[leftmargin=*]
 
-\item Creating the \cpp function
+\item Creating the \cpp/ function
   \begin{enumerate}
-  \item Creating a function signature for the \cpp function using \cpp
+  \item Creating a function signature for the \cpp/ function using \cpp/
     primatives and \texttt{Rcpp::RObject} derivatives
-  \item Copy-pasting the body of the original \pkg{Armadillo} code into the
+  \item Copy-pasting the body of the original \arma/ code into the
     function
-  \item Creating a return argument for the function, again using \cpp primatives
+  \item Creating a return argument for the function, again using \cpp/ primatives
     and \texttt{Rcpp::RObject} derivatives
   \end{enumerate}
 
-\item Creating the \R wrapper
+\item Creating the \R/ wrapper
   \begin{enumerate}
   \item Copy-pasting the function signature and argument-checking lines of the
-    original \R function
-  \item Compiling the the \cpp code, loading the newly created shared library
+    original \R/ function
+  \item Compiling the the \cpp/ code, loading the newly created shared library
     into memory, and obtaining a pointer to it, all through a call to
     \texttt{Rcpp::sourceCpp}
   \end{enumerate}
 
 \item Modifying the file containing the statistical helper functions so that it
-  would work with both code being called from \R and as part of a standalone
-  \cpp program.  The issue that I had was that that the \texttt{rnorm} function
-  wasn't declared when compiling the functions with the \texttt{RcppArmadillo.h}
+  would work with both code being called from \R/ and as part of a standalone
+  \cpp/ program.  The issue that I had was that that the \texttt{rnorm} function
+  wasn't declared when compiling the functions with the \texttt{Rcpparmadillo.h}
   header (as opposed to the \texttt{Rmath.h} header).  In the
   \texttt{RcppArmadillo.h} header they map the alias \texttt{R::rnorm} to the
   \texttt{rnorm} function, so what I did as a solution was to create an alias of
   this same name for the case when the file is included as part of a standalone
-  \cpp program, and that way I can call the desired function by
+  \cpp/ program, and that way I can call the desired function by
   \texttt{R::rnorm} in both cases.
 \end{enumerate}
 
 
-\subsection{Writing \lmrcppeigen}
+\subsection{Writing \lmrcppeigen/}
 
 I essentially just followed all the steps from section \ref{sec: rcpp arma} but using the existing
-\pkg{Eigen} files - this was trivial to complete after the experiences creating the previous functions / programs.
+\eigen/ files - this was trivial to complete after the experiences creating the previous functions / programs.
 
 
 
 
-\section{Using the functions / programs}
-
-We can use the \lmr function as follows.
-
-<<using-bayes_r>>=
-source("Bayes_LM.R")
-set.seed(55)
-out_time_r <- bayes_lm_r(p = 4, prop_nonzero = 1, print_stats=TRUE)
-out_time_r
-@
-
-\noindent We can use the \lmarma and \texttt{bayes\_lm\_eigen}
-programs through the usual command-line syntax.
-
-<<using-bayes_lm_arma, engine="bash">>=
-./bayes_lm_arma -p=3 -prop_nonzero=1 -decomp_method=eigen -seed=93  \
-      -write_samples=true -samples_file_loc=Samples_Test_Arma.dat   \
-      -write_ctime=true -ctime_file_loc=CTime_Test_Arma.dat
-cat Samples_Test_Arma.dat | head -n5
-cat CTime_Test_Arma.dat
-
-./bayes_lm_eigen -nsamp=11089 -n=52 -p=8 -prop_nonzero=0.5 -seed=26  \
-      -print_stats=true
-
-
-@
-
-\vspace{5mm} \noindent The syntax for using the \R functions created via \pkg{Rcpp} is the
-same as the \R-only version.
-<<using-rcpp>>=
-source("Bayes_LM_Rcpp_Arma.R")
-source("Bayes_LM_Rcpp_Eigen.R")
-set.seed(22)
-
-# Sampler examples with arbitrary parameter specifications
-out_time_rcpp_arma <- bayes_lm_rcpp_arma(n=125, p=20, nsamp=1.5e4, decomp_method="eigen")
-out_time_rcpp_eigen <- bayes_lm_rcpp_eigen(n=500, p=10, true_beta_sd=3, true_sigma=4, sd_x=5)
-
-out_time_rcpp_arma
-out_time_rcpp_eigen
-@
-
-
-
-
-
-\section{Profiling the functions / programs}
-
-
-\subsection{Profiling \lmr}
-
-\subsubsection{The cost of using \texttt{system.time}} \label{sec: system.time}
-
-Lets take a look at the time that it takes to execute 10,000 samples for a data
-set with 100 observations and 15 variables.  First we make an observation about
-the cost of recording the elapsed time for each of the sections.  Recording the
-elapsed time in lmr is done via \texttt{system.time} which in turn calls
-\texttt{proc\_time} twice.  \texttt{system.time} is called twice during each
-scan of the sampler, one for the matrix inversion, and once for the multivariate
-normal sampling step.
-
-<<timing-sections-lmr>>=
-set.seed(11)
-
-# Time the individual sections by default
-(time_r <- bayes_lm_r(n=100, p=15, nsamp=1e4))
-# The function returns 0 for the sections when they are not timed
-(time_r_notime <- bayes_lm_r(n=100, p=15, nsamp=1e4, time_sections=FALSE))
-@
-
-\noindent So in this instance we see that calling \texttt{system.time} twice
-during each scan makes the sampler run \Sexpr{pct((time_r[3] / time_r_notime[3])
-  - 1)}\% longer!  This is a tremendous cost and has major implications for
-profiling \R code.
-
-Now these figures seem to suggest that the cost of the matrix inversion and the
-multivariate normal sampling step was \Sexpr{pct(sum(time_r[1:2]) /
-  time_r[3])}\% of the elapsed time of the sampler.  However, it seems that the
-cost of calling \texttt{system.time} may be included in the elapsed time values
-for these steps - since the sum time of the two steps is larger than the entire
-algorithm time when we didn't record the elapsed time for these steps.  So we
-have another reason to be careful when using \texttt{proc\_time} to profile \R
-code.
-
-
-
-\subsubsection{Profiling \lmr with \texttt{proftools}}
-
-
-<<profiling-lmr-proftools>>=
-# Profile an arbitrary instance of bayes_lm_r
-set.seed(82)
-library(proftools)
-pd <- profileExpr( bayes_lm_r(n=100, p=15, nsamp=1e4, time_sections=FALSE) )
-
-# Print the 10 function calls that bayes_lm_r spent the most time executing
-head(prof_stats <- funSummary(pd, FALSE), 10)
-
-# Plot a call graph of the exectution instance
-plotProfileCallGraph(pd, total.pct=5)
-@
-
-
-\noindent So the profiler estimates that about
-\Sexpr{round(sum(prof_stats$self.pct[1:2]))}\% of the running time of the
-program was spent on the calls to \texttt{solve.default} and
-\texttt{chol.default}.  It is interesting to note that
-\texttt{all.equal.numeric} and mean \texttt{mean} required so much time to
-perform during the sampler, since neither of them is explicitely called during
-\lmr.
-
-
-
-\subsection{Profiling \lmarma}
-
-
-\subsubsection{The cost of using \texttt{clock\_gettime}}
-
-We can compile a program that does not track the elapsed time of the matrix
-inversion and the multivariate normal sampling step by declaring the
-\texttt{NO\_TIMER} macro.  Then a comparison for of running times of the samplers
-is shown below.
-
-<<clock_gettime, engine="bash">>=
-g++ Bayes_LM_Arma.cpp Parse_Args.cpp Stats_Fcns_Arma.cpp      \
-      -DMATHLIB_STANDALONE -Wall -g3 -O3 -lRmath -larmadillo  \
-      -DNO_TIMER -o bayes_lm_arma_no_timer
-
-time ./bayes_lm_arma_no_timer -n=100 -p=15 -nsamp=10000
-
-time ./bayes_lm_arma -n=100 -p=15 -nsamp=10000
-@
-
-So for this particular instance there was a small cost in invoking the system
-timer.  However this cost is far cheaper than when using the \R system timer.
-
-
-
-\newpage
-\subsubsection{Profiling \lmarma with \texttt{callgrind}}
-
-The call graph for an instance of \lmarma execution as generated by
-\texttt{callgrind} is shown below. The call \texttt{dpotri} computes the inverse
-of a real symmetric positive definite matrix using the Cholesky factorization.
-The call \texttt{dpotrf} computes the Cholesky factorization of a real symmetric
-positive definite matrix.\vspace{4mm}
-
-\begin{center} \includegraphics[width=0.96\textwidth]{figure/Callgraph_Arma.png} \end{center}
-
-
-
-\newpage
-\subsubsection{Profiling \lmeigen with \texttt{callgrind}}
-
-The call graph for an instance of \lmarma execution as generated by
-\texttt{callgrind} is shown below. The call \texttt{dpotri} computes the inverse
-of a real symmetric positive definite matrix using the Cholesky factorization.
-The call \texttt{dpotrf} computes the Cholesky factorization of a real symmetric
-positive definite matrix.\vspace{4mm}
-
-\begin{center} \includegraphics[width=0.96\textwidth]{figure/Callgraph_Eigen.png} \end{center}
-
-
-\subsubsection{Profiling \lmrcpparma and \lmrcppeigen}
-
-TODO: it would be a good exercise to profile the \pkg{Rcpp} versions of Bayesian
-linear model programs, since presumably we should get comparable results to when
-we used the standalone \cpp versions.  But I have not yet learned how to do
-this.
 
 
 
 
 \section{Comparison of program speeds}
 
-<<n-gets-big, include=FALSE>>=
-nrepl <- 10
-ctime_n <- list()
-ctime_n$ronly <- list(pow8  = replicate(nrepl, bayes_lm_r(n=2^8)),
-                      pow10 = replicate(nrepl, bayes_lm_r(n=2^10)),
-                      pow12 = replicate(nrepl, bayes_lm_r(n=2^12)),
-                      pow14 = replicate(nrepl, bayes_lm_r(n=2^14)),
-                      pow16 = replicate(nrepl, bayes_lm_r(n=2^16)))
+The speed in which Bayes linear model sampler could be completed was measured
+using 5 different software configurations:
 
-ctime_n$rcpp_arma <- list(pow8  = replicate(nrepl, bayes_lm_rcpp_arma(n=2^8)),
-                          pow10 = replicate(nrepl, bayes_lm_rcpp_arma(n=2^10)),
-                          pow12 = replicate(nrepl, bayes_lm_rcpp_arma(n=2^12)),
-                          pow14 = replicate(nrepl, bayes_lm_rcpp_arma(n=2^14)),
-                          pow16 = replicate(nrepl, bayes_lm_rcpp_arma(n=2^16)))
-
-ctime_n$rcpp_eigen <- list(pow8  = replicate(nrepl, bayes_lm_rcpp_eigen(n=2^8)),
-                           pow10 = replicate(nrepl, bayes_lm_rcpp_eigen(n=2^10)),
-                           pow12 = replicate(nrepl, bayes_lm_rcpp_eigen(n=2^12)),
-                           pow14 = replicate(nrepl, bayes_lm_rcpp_eigen(n=2^14)),
-                           pow16 = replicate(nrepl, bayes_lm_rcpp_eigen(n=2^16)))
-
-for (i in 1:nrepl) {
-    for (k in c(8, 10, 12, 14, 16)) {
-        system(paste0("./bayes_lm_arma -write_ctime=true ",
-                      "-ctime_file_loc=Output/n_arma", k, ".dat -n=", 2^k))
-        system(paste0("./bayes_lm_eigen -write_ctime=true ",
-                      "-ctime_file_loc=Output/n_eigen", k, ".dat -n=", 2^k))
-    }
-}
-
-ctime_n$arma <- list(pow8  = matrix(scan("Output/n_arma8.dat"), nrow=3),
-                     pow10 = matrix(scan("Output/n_arma10.dat"), nrow=3),
-                     pow12 = matrix(scan("Output/n_arma12.dat"), nrow=3),
-                     pow14 = matrix(scan("Output/n_arma14.dat"), nrow=3),
-                     pow16 = matrix(scan("Output/n_arma16.dat"), nrow=3))
-
-ctime_n$eigen <- list(pow8  = matrix(scan("Output/n_eigen8.dat"), nrow=3),
-                      pow10 = matrix(scan("Output/n_eigen10.dat"), nrow=3),
-                      pow12 = matrix(scan("Output/n_eigen12.dat"), nrow=3),
-                      pow14 = matrix(scan("Output/n_eigen14.dat"), nrow=3),
-                      pow16 = matrix(scan("Output/n_eigen16.dat"), nrow=3))
-
-@
+\begin{center} \setlength{\tabcolsep}{20pt}
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    Configuration & Details \\
+    \midrule
+    \R/ + \atlas/        & \lmr/ using \atlas/ version of both \blas/ and \lapack/ \\[1ex]
+    \R/ + \openblas/     & \lmr/ using \openblas/ version of \blas/ and reference \lapack/ \\[1ex]
+    \arma/ + \atlas/    & \lmrcpparma/ using \atlas/ version of both \blas/ and \lapack/ \\[1ex]
+    \arma/ + \openblas/ & \lmrcpparma/ using \openblas/ version of \blas/ and reference \lapack/ \\[1ex]
+    \eigen/             & \lmrcppeigen/ (does not use \blas/ / \lapack/) \\
+    \bottomrule
+  \end{tabular}
+\end{center}
 
 
 
+% \noindent Some explanation of what is meant here is needed.  \R/ + \atlas/ means that
+% the runtime of \lmr/ was measured using the \atlas/ version of both
+% \blas/ and \lapack/.  Similarly, \R/ + \openblas/ means that the
+% runtime of \lmr/ was measured using the \openblas/ version of \blas/ and
+% reference \lapack/.  \arma/ + \atlas/ and \arma/ +
+% \openblas/ means that the runtime of \lmrcpparma/ was measured using
+% \atlas/ / \openblas/ libraries.  Finally, \eigen/ means that the
+% runtime of \lmrcppeigen/ was measured (note that \eigen/ does not use
+% \blas/ / \lapack/ routines).
 
-<<test-n, echo=FALSE, dev="CairoPDF", fig.height=6, out.width="1\\textwidth">>=
+\noindent NB: to obtain peak efficiencies of \atlas/ and \openblas/ the libraries should be
+compiled on the local machine - however these tests were run using the \atlas/
+and \openblas/ Debian packages.
 
-load("Output/ctime_n.RData")
-source("Writeup/Graph_Times.R")
-ctime_n_ave <- transform_times(ctime_n)
 
-titlevec <- c("Matrix inverse elapsed time", "Normal sampling elapsed time",
-              "Remaining operations elapsed time", "Total time")
-colorvec <- c("red", "blue", "green", "purple", "springgreen4")
+\subsection{Runtimes as $n$ increases}
 
-graph_times(ctime_n_ave,
-            xvals=c(8, 10, 12, 14, 16), xlab="log2 number of observations",
-            ylab="log2 time in seconds", titlevec,
-            titlemain="Elapsed time as n increases", colorvec)
-@
+\includegraphics[width=1\textwidth]{figure/n_increase}
+
+
 
 
 

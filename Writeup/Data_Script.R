@@ -73,7 +73,7 @@ titlevec <- c("Inverse", "Sampling MVN", "Matrix Operations", "Total")
 titlemain <- "Graph as n increases (p=100, samples=10,000)"
 colorvec <- c(r_atlas="red", arma_atlas="blue", arma_openblas="purple",
               eigen="green", r_openblas="orange")
-legendvec <- c("R + Atlas", "Arma + Atlas", "Arma + OpenBLAS", "Eigen", "R + OpenBLAS")
+legendvec <- c("R + ATLAS", "Arma + ATLAS", "Arma + OpenBLAS", "Eigen", "R + OpenBLAS")
 
 # Build graph
 pdf("Writeup/figure/n_increase.pdf", width=8, height=6)
