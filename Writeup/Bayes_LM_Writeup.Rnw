@@ -89,9 +89,7 @@ pct <- function(x) { round(100 * x) }
   {\scshape\LARGE A case study in the implementation of a Bayesian linear model
     using \textsf{R} and / or C++ libraries \par}
   \vspace{1cm}
-  {\scshape\Large Speed comparison, profiling \par}
-  % \vspace{1.5cm}
-  % {\huge\bfseries Pigeons love doves\par}
+  {\scshape\Large Including speed comparisons (and more to come) \par}
   \vspace{2cm}
   {\Large\itshape David Pritchard\par}
 
@@ -141,7 +139,7 @@ in this document were obtained are listed below:
 \item 32 KB L1 cache
 \item 256 KB L2 cache
 \item 3 MB L3 cache
-\item Ubuntu Linux 14.04 system
+\item Ubuntu GNU/Linux 14.04 system
 \end{itemize}
 
 % Print the computer hardware specs
@@ -267,7 +265,7 @@ files are used for more than one implementation.
 \subsection{Writing \lmr/}
 
 The function signature for \lmr/ is shown in the following.  The interfaces to
-each of the other functions / programs is similar.
+\lmrcpparma/ and \lmrcppeigen/ are similar.
 
 <<lmr-function-signature, eval=FALSE>>=
 bayes_lm_r <- function(n                = 100L,
@@ -290,7 +288,7 @@ In short the function simulates the data $\vec{X}, \vec{y}$, and $\vec{\beta}$,
 and then performs a Gibbs sampler for the model described in section \ref{sec:
   model def} using the simulated data.
 
-\subsubsection{More detailed description}
+\subsubsection{Fuller description}
 
 In more detail, the function samples an $n \times p$ matrix $\vec{X}$ with each
 element $X_{ij}$ independently sampled from a normal distribution with mean 0
@@ -407,7 +405,7 @@ functionality.
   little more manual work to read the function arguments (by arguments here I
   mean command-line arguments).  Of course there are some extremely powerful
   tools provided by the C standard, so thankfully we don't have to do much work
-  from scratch.  However there are still some mundane tasks that need to be
+  from scratch.  However there are still some mundane work that need to be
   performed when parsing the arguments - this required about 150 lines of code.
   In comparison the \R/ code that I wrote for argument checking was about 75
   lines.
@@ -419,9 +417,9 @@ functionality.
   \texttt{GetRNGstate()}, and that after all the required variates have been
   generated, \texttt{GetRNGstate()} should be called.  However, when using the
   \R/ math library as a standalone library, the random number stream is
-  automatically set up for you, and that setting the seed is accomplished
-  through \texttt{set\_seed} (declared in \texttt{Rmath.h}).  See the
-  \emph{Writing R Extensions} manual section 6.16 for more dpetails.
+  automatically set up for you, and setting the seed is accomplished through
+  \texttt{set\_seed} (declared in \texttt{Rmath.h}).  See the \emph{Writing R
+    Extensions} manual section 6.16 for more details.
 \end{enumerate}
 
 \subsubsection{Compiling \texttt{C++} code with \arma/} \label{sec: compiling with arma}
@@ -482,7 +480,10 @@ There were a few differences, however.
 \item There wasn't a built-in matrix inverse method that leveraged the fact that
   the matrix that we are inverting is a symmetric postive-definite matrix.
   Instead, this required me to use the \texttt{solve} method for the Cholesky
-  decomposition.
+  decomposition, where we are solving for the identity matrix.  It would seem
+  that a dedicated method for the inverse could potentially be more efficient.
+  The speed comparisons in section \ref{sec: p increase} seem to support this
+  possibility.
 \end{enumerate}
 
 
@@ -501,7 +502,12 @@ g++ Bayes_LM_Eigen.cpp Parse_Args.cpp Stats_Fcns_Eigen.cpp  \
 library, instead it is statically linked as part of the compilation process.
 
 
-\subsection{Writing \lmrcpparma/}
+\subsection{Writing \lmrcpparma/ and \lmrcppeigen/}
+
+The steps to convert the \cpp/ code using the \arma/ library to a function for
+use through \R/ were exactly the same as for converting \cpp/ code using the
+\eigen/ library, so I have included them in the same section.  Any mention of
+\arma/ can be replaced by \eigen/.
 
 \subsubsection{Overall impression}
 
@@ -546,25 +552,18 @@ from them, and in turn calls our \cpp/ function, providing these
 
 \item Modifying the file containing the statistical helper functions so that it
   would work with both code being called from \R/ and as part of a standalone
-  \cpp/ program.  The issue that I had was that that the \texttt{rnorm} function
+  \cpp/ program
+  \begin{enumerate}
+  \item The issue that I had was that that the \texttt{rnorm} function
   wasn't declared when compiling the functions with the \texttt{Rcpparmadillo.h}
   header (as opposed to the \texttt{Rmath.h} header).  In the
-  \texttt{RcppArmadillo.h} header they map the alias \texttt{R::rnorm} to the
+  \texttt{RcppArmadillo.h} header the authors map the alias \texttt{R::rnorm} to the
   \texttt{rnorm} function, so what I did as a solution was to create an alias of
   this same name for the case when the file is included as part of a standalone
   \cpp/ program, and that way I can call the desired function by
   \texttt{R::rnorm} in both cases.
+  \end{enumerate}
 \end{enumerate}
-
-
-\subsection{Writing \lmrcppeigen/}
-
-I essentially just followed all the steps from section \ref{sec: rcpp arma} but using the existing
-\eigen/ files - this was trivial to complete after the experiences creating the previous functions / programs.
-
-
-
-
 
 
 
@@ -600,16 +599,95 @@ using 5 different software configurations:
 % runtime of \lmrcppeigen/ was measured (note that \eigen/ does not use
 % \blas/ / \lapack/ routines).
 
-\noindent NB: to obtain peak efficiencies of \atlas/ and \openblas/ the libraries should be
-compiled on the local machine - however these tests were run using the \atlas/
-and \openblas/ Debian packages.
+\noindent Caveat: to obtain peak efficiencies of \atlas/ and \openblas/ the
+libraries should be compiled on the local machine, however these tests were run
+using the \atlas/ and \openblas/ Debian packages.
 
 
-\subsection{Runtimes as $n$ increases}
+\newpage
+\subsection{Runtimes as $n$ increases} \label{sec: n increase}
 
-\includegraphics[width=1\textwidth]{figure/n_increase}
+\includegraphics[width=1\textwidth]{figure/n_increase} \vspace{2mm}
+
+\noindent Observations / impressions regarding the speed comparisons:
+
+\begin{itemize}[leftmargin=*]
+
+\item The matrix operations are the dominating cost in performing the Gibbs
+  sampler as $n$ gets comparatively large.  The main cost here is incurred by
+  calculating $|| \vec{y} - \vec{X\beta}^{(s)} ||^2$.
+
+\item The cost in calculating the matrix inverse and sampling from the
+  multivariate normal distribution mostly is a function of $p$, so we see that
+  the time required for these sections remains mostly constant.
+
+\item The \R/-``only'' functions are essentially dominated by the code calling
+  \cpp/-workehorse functions, by a factor of about 5-6 times for the overall
+  running time.
+
+\item The parallel processing done for performing the matrix inverse and
+  sampling the multivariate normal distribution is slower for the \arma/ +
+  \openblas/ than for the sequential processing done for \arma/ + \atlas/ or
+  \eigen/ by about a factor of 1.5 or 2.5 times, respectively.  Since these
+  operations are dependent mostly on the size of $p$ which is relatively small
+  here, it seems that the overhead required in the construction and reductions
+  required for parallel processing outweighs the gain incurred by executing
+  instructions concurrently.
+
+\item In a comparison of the functions calling sequential \cpp/ code, \arma/ +
+  \atlas/ is dominated by \eigen/.
+
+\item \arma/ + \openblas/ does comparatively poorly for small sizes of $n$,
+  again presumably due to the overhead incurred for parallel processing.  When
+  $n$ gets large \arma/ + \openblas/ does better than \arma/ + \atlas/, by a
+  factor of about 3.5.
+
+\item \eigen/ is at least tied for the fastest for every size of $n$ observed.
+
+\end{itemize}
 
 
+\newpage
+\subsection{Runtimes as $p$ increases} \label{sec: p increase}
+
+\includegraphics[width=1\textwidth]{figure/p_increase}\vspace{6mm}
+
+\noindent Observations / impressions regarding the speed comparisons:
+
+\begin{itemize}[leftmargin=*]
+
+\item Calculating the matrix inverse and sampling from the multivariate normal
+  distribution are the dominating costs in performing the Gibbs sampler as $p$
+  gets comparatively large.
+
+\item The \R/-``only'' functions are dominated by the code calling
+  \cpp/-workehorse functions that use the \arma/ library, by a factor of about 4
+  times for the overall running time.  However, \R/ + \openblas/ outperforms
+  \eigen/ when calculating the matrix inverse for large $p$ by about a factor of
+  2.
+
+\item \arma/ + \openblas/ does comparatively poorly for small sizes of $p$,
+  again presumably due to the overhead incurred for parallel processing (with
+  the interesting exception of the matrix operations section).  However when $p$
+  gets large \arma/ + \openblas/ has the best performance, and does better than
+  the second-best competitor, \arma/ + \atlas/, by a factor of about 2.
+
+\item The bottleneck for \eigen/ seems to be the solve method for the Cholesky
+  decomposition.  This statement is based on the fact that the cost of the
+  multivariate normal sampling section is about equal for \eigen/ compared to
+  \arma/ + \atlas/, and which consists of a Cholesky decomposition and matrix
+  multiplication.  However, the matrix inverse section for \eigen/, which
+  consists of a Cholesky decomposition and a solve method, performs worse than
+  the \arma/ + \atlas/ program.
+
+  Perhaps this is due to the fact that this is a general solve method for a
+  Cholesky decomposition - i.e. we solve $\vec{LL}^{T}\vec{X} = \vec{B}$ for
+  $\vec{X}$, where we choose $\vec{B}$ to be the identity matrix and $\vec{L}$
+  is the Cholesky decomposition of the matrix of interest.  However it would
+  seem that a method that is specialized for calculating the inverse would be
+  far more efficient.  Is there a better way to do it in \eigen/?
+
+\end{itemize}
 
 
 

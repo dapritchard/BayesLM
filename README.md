@@ -11,6 +11,7 @@ profiling techniques on the software.
 A more detailed explanation of the functions / programs found in this repository
 can be found at `Writeup/Bayes_LM_Writeup.pdf`. The file also displays my
 findings and experiences in terms of speed comparisons and program profiling.  
+***
 
 The root directory contains the following files:
 
@@ -38,4 +39,10 @@ The root directory contains the following files:
     * `Check_Valid_Input.R`
     * `Stats_Fcns_Eigen.cpp`
 
-![n increases](Writeup/figure/n_increase.pdf "Title")
+
+
+#### Implementation speed comparisons
+
+Compare the speeds of the programs as the number of observations (i.e. as _n_) increases
+
+![As n increases](Writeup/figure/n_increase.pdf)

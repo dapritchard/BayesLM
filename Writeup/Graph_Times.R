@@ -38,7 +38,7 @@ graph_times <- function(time_obs, xvals, xlab_nm, ylab_nm, titlevec, titlemain,
     plot(-100, -100, bty="n", xlim=c(0, 1), ylim=c(0, 1), axes=FALSE, xlab=NULL)
     alphab_idx <- order(legendvec)
     legend(x=-2.75, y=2.35, legend=legendvec[alphab_idx],  lty=c(1, 1, 1),
-           cex=0.9, lwd=c(1, 1, 1), col=colorvec[alphab_idx], xpd=NA,
+           cex=0.9, lwd=rep(1.15, 3), col=colorvec[alphab_idx], xpd=NA,
            box.lwd=0.5)
 
     # 2, 3
