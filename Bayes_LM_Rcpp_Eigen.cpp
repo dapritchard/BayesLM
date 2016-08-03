@@ -216,29 +216,17 @@ Rcpp::NumericVector bayes_lm_rcpp_eigen_(int n,
     if (print_stats) {
 
 	// Allocate memory for tables with cols true values and quantiles
-	Eigen::MatrixXd table_beta_quant(p, 4);
-	Eigen::MatrixXd table_gamma_quant(1, 4);
+	Eigen::MatrixXd table_beta_quant;
+	Eigen::MatrixXd table_gamma_quant;
+	Eigen::VectorXd probs(3);
 
-	// Sort data in preperation for quantile function
+	// Transpose to column-major format
 	out_beta.transposeInPlace();
-	double* col_start = out_beta.data();
-	for (int j = 0; j < p; j++) {
-	    qsort(col_start, nsamp, sizeof(double), compare_dbl);
-	    col_start += nsamp;
-	}
-	qsort(out_gamma.data(), nsamp, sizeof(double), compare_dbl);
 
-	// Fill in table entries for beta samples quantiles
-	table_beta_quant.col(0) = true_beta;
-	table_beta_quant.col(1) = quantile(out_beta, 0.025);
-	table_beta_quant.col(2) = quantile(out_beta, 0.500);
-	table_beta_quant.col(3) = quantile(out_beta, 0.975);
-
-	// Fill in table entries for gamma samples quantiles
-	table_gamma_quant(0, 0) = 1 / (true_sigma * true_sigma);
-	table_gamma_quant(0, 1) = quantile(out_gamma, 0.025);
-	table_gamma_quant(0, 2) = quantile(out_gamma, 0.500);
-	table_gamma_quant(0, 3) = quantile(out_gamma, 0.975);
+	// Calculate empirical quantiles
+	probs << 0.025, 0.500, 0.975;
+	table_beta_quant = quantile_table(true_beta, out_beta, probs);
+	table_gamma_quant = quantile_table(1 / (true_sigma * true_sigma), out_gamma, probs);
 	
 	Rcpp::Rcout << "\n"
 		    << "Parameter specifications:\n"
