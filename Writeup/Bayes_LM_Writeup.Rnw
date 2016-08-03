@@ -209,15 +209,6 @@ distribution $p( \vec{\beta}, \sigma^2 \sbar \vec{y}, \vec{X} )$ can be obtained
 
 \section{Progam descriptions}
 
-% I wrote a total of five implementations of the Bayesian linear model described in section \ref{sec: model def}.  In brief, the implementations were as follows:
-% \begin{itemize}
-% \item An \R/-only version
-% \item A \cpp/-only version using the \pkg{Armadillo} library
-% \item A \cpp/-only version using the \eigen/ library
-% \item An \R/ function that calls a \cpp/ function (\pkg{Armadillo} version) via \pkg{Rcpp}
-% \item An \R/ function that calls a \cpp/ function (\eigen/ version) via \pkg{Rcpp}
-% \end{itemize}
-
 The source code for the following \R/ functions / executable programs is
 contained in the root directory.  The name of each function / program is listed
 as well as the files for each containing the source code.  Note that some of the
@@ -396,8 +387,9 @@ functionality.
   Each of these functions required just a few lines of code.
 
 \item I also had to construct a quantile function.  To do so I emulated the
-  quantile function from \R/ under the default formula; this required about a
-  100 lines of code.
+  quantile function from \R/ under the default formula; this required about 50
+  lines of code.  It required another 50 lines of code to construct a table of
+  the quantiles for writing to stdout.
 
 \item Another change that was required going from \R/ to \cpp/ was reading in
   the function arguments.  In \R/ all of the work that is performed parsing the
@@ -422,12 +414,14 @@ functionality.
     Extensions} manual section 6.16 for more details.
 \end{enumerate}
 
+
 \subsubsection{Compiling \texttt{C++} code with \arma/} \label{sec: compiling with arma}
 
 The source code can be compiled as follows.
 <<compiling-arma, engine="bash", eval=FALSE>>=
-g++ Bayes_LM_Arma.cpp Parse_Args.cpp Stats_Fcns_Arma.cpp    \
-    -DMATHLIB_STANDALONE -Wall -g3 -O3 -lRmath -larmadillo  \
+g++ Bayes_LM_Arma.cpp Parse_Args.cpp Stats_Fcns_Arma.cpp  \
+    -DMATHLIB_STANDALONE -I/usr/share/R/include           \
+    -Wall -g3 -O3 -lR -lRmath -larmadillo                 \
     -o bayes_lm_arma
 @
 
@@ -435,14 +429,16 @@ g++ Bayes_LM_Arma.cpp Parse_Args.cpp Stats_Fcns_Arma.cpp    \
 to be pulled into the compilation.  The argument \texttt{-DMATHLIB\_STANDALONE}
 defines the MATHLIB\_STANDALONE macro which in turn configures the
 \texttt{Rmath.h} header for use with the Rmath standalone library.
-\texttt{-Wall} tells \texttt{gcc} to provide additional warnings for potentially
-problematic constructs, \texttt{-g3} includes debugging information in the
-resulting binary file, and \texttt{-O3} requests optimization from the compiler
-(note that this optimization flag is very important for heavily templated code
-such as the \arma/ and \eigen/ libraries).  The arguments
-\pkg{-lRmath} and \pkg{-larmadillo} tell the compiler the link the files against
-the \R/ math library and \arma/ library, respectively.  The argument
-\texttt{-o bayes\_lm\_arma} specifies the filename of the resulting executable.
+\texttt{-I/usr/share/R/include} provides the location on my system where the
+\texttt{R.h} header is to be found.  \texttt{-Wall} tells \texttt{gcc} to
+provide additional warnings for potentially problematic constructs, \texttt{-g3}
+includes debugging information in the resulting binary file, and \texttt{-O3}
+requests optimization from the compiler (note that this optimization flag is
+very important for heavily templated code such as the \arma/ and \eigen/
+libraries).  The arguments \texttt{-lR}, \texttt{-lRmath}, and
+\texttt{-larmadillo} tell the compiler the link the files against the \R/ API,
+the \R/ math library and \arma/ library, respectively.  The argument \texttt{-o
+  bayes\_lm\_arma} specifies the filename of the resulting executable.
 
 
 

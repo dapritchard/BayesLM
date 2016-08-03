@@ -3,9 +3,9 @@
 #ifdef MATHLIB_STANDALONE
 
 #include <Eigen/Dense>
-#include <R.h>          // R_rsort, rPsort
-#include <Rmath.h>      // rnorm
 #include <stdexcept>    // runtime_error
+#include <R.h>          // rPsort
+#include <Rmath.h>      // rnorm
 
 /* Creates the same alias when using Rmath as a stand-alone library as when we
  * are calling this code through R via Rcpp.  This allows us to use the same
@@ -295,8 +295,6 @@ Eigen::VectorXd quantile(double* values,
  * that X has >= 2 rows of data, and that prob is nondecreasing and has values
  * in (0, 1).
  */
-
-#include <iostream>
 
 Eigen::MatrixXd quantile_table(Eigen::VectorXd& true_beta, 
 			       Eigen::MatrixXd& X, 

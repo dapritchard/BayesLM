@@ -85,9 +85,10 @@
 
 /* Compile using e.g.
  *
- *      g++ Bayes_LM_Arma.cpp Parse_Args.cpp Stats_Fcns_Arma.cpp    \
- *          -DMATHLIB_STANDALONE -Wall -g3 -O3 -lRmath -larmadillo  \ 
- *          -o bayes_lm_arma
+ *     g++ Bayes_LM_Arma.cpp Parse_Args.cpp Stats_Fcns_Arma.cpp  \
+ *         -DMATHLIB_STANDALONE -I/usr/share/R/include           \
+ *         -Wall -g3 -O3 -lR -lRmath -larmadillo                 \
+ *         -o bayes_lm_arma
  *
  * This requires having the Armadillo and Rmath libraries available.
  */
@@ -347,25 +348,20 @@ int main(int argc, char* argv[]) {
 
     if (print_stats) {
 
-	// Create two column table with cols true values and median samples
-	arma::mat table_beta_quant(p, 4);
-	arma::mat table_gamma_quant(1, 4);
+	// Create tables with true values and empirical quantiles
+	arma::mat table_beta_quant;
+	arma::mat table_gamma_quant;
 
-	// Sort data for quantile function
-	out_beta = sort(out_beta.t());
-	out_gamma = sort(out_gamma);
+	// Declare and initialize probs, true_gamma
+	arma::vec probs;
+	arma::vec true_gamma;
+	probs << 0.025 << 0.500 << 0.975;
+	true_gamma << 1 / (true_sigma * true_sigma);
 
-	// Fill beta table columns
-	table_beta_quant.col(0) = true_beta;
-	table_beta_quant.col(1) = quantile(out_beta, 0.025);
-	table_beta_quant.col(2) = quantile(out_beta, 0.500);
-	table_beta_quant.col(3) = quantile(out_beta, 0.975);
-
-	// Fill gamma table elements
-	table_gamma_quant(0, 0) = 1 / (true_sigma * true_sigma);
-	table_gamma_quant(0, 1) = as_scalar( quantile(out_gamma, 0.025) );
-	table_gamma_quant(0, 2) = as_scalar( quantile(out_gamma, 0.500) );
-	table_gamma_quant(0, 3) = as_scalar( quantile(out_gamma, 0.975) );
+	// Calculate empirical quantiles
+	out_beta = out_beta.t();
+	table_beta_quant = quantile_table(true_beta, out_beta, probs);
+	table_gamma_quant = quantile_table(true_gamma, out_gamma, probs);
 
 	std::cout << "\n"
 		  << "Parameter specifications:\n"
