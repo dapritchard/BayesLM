@@ -85,9 +85,9 @@
 
 /* Compile using e.g.
  *
- *        g++ Bayes_LM_Eigen.cpp Parse_Args.cpp Stats_Fcns_Eigen.cpp \
- *            -DMATHLIB_STANDALONE -I/usr/include/eigen3/            \
- *            -I/usr/share/R/include -Wall -g3 -O3 -lR -lRmath       \
+ *        g++ Bayes_LM_Eigen.cpp Parse_Args.cpp Stats_Fcns_Eigen.cpp  \
+ *            -DMATHLIB_STANDALONE -I/usr/include/eigen3/             \
+ *            -I/usr/share/R/include -Wall -g3 -O3 -lR -lRmath        \
  *            -o bayes_lm_eigen
  *
  * This requires having the Eigen headers and Rmath library available.

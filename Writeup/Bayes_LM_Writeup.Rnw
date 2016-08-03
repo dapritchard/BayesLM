@@ -325,8 +325,8 @@ sampler and not any computations performed before or after.
 
 This is quite a simple model to code (the model was chosen for this reason!).
 Outside of checking the function arguments for validity, the function spans
-about 150 lines of code, including comments and blank lines!  \R/ provides all of
-the tools we need for this particular program and makes life very nice and
+about 150 lines of code, including comments and blank lines.  \R/ provides all
+of the tools we need for this particular program and makes life very nice and
 simple for us.
 
 
@@ -355,10 +355,10 @@ specifications (i.e. the specifications obtained by invoking
                 -set_seed=22
 @
 
-\noindent Actually, if left unspecified the seed is generating using the CPU
-clock so there isn't really a default - that way running the program without
-specifiying a seed generates a different sequence every time.  The number 22 was
-arbitrarily chosen here as an example.
+\noindent *Actually, if left unspecified the seed is generating using the CPU
+clock so there isn't really a default for \texttt{set\_seed}.  That way running
+the program without specifiying a seed generates a different sequence every
+time.  The number 22 was arbitrarily chosen here as an example.
 
 
 \subsubsection{Overall impression}
@@ -395,9 +395,9 @@ functionality.
   one using the Cholesky decomposition, and one using the Eigen decompostion.
   Each of these functions required just a few lines of code.
 
-\item I also had to construct a quantile function (\arma/ provides a
-  median quantile method, but not for arbitrary quantiles).  I just emulated the
-  default quantile function from \R/; this required about a dozen lines of code.
+\item I also had to construct a quantile function.  To do so I emulated the
+  quantile function from \R/ under the default formula; this required about a
+  100 lines of code.
 
 \item Another change that was required going from \R/ to \cpp/ was reading in
   the function arguments.  In \R/ all of the work that is performed parsing the
@@ -467,16 +467,6 @@ There were a few differences, however.
   independent standard normal entries, so I had to create one; this requires
   just a handful of lines of code.
 
-\item The easy way to calculate the empirical quantiles of the samples is to
-  sort the data beforehand.  As opposed to \arma/, there was not a
-  method for sorting the rows or columns of a matrix, so this requires just
-  bringing in e.g. \texttt{qsort} or \texttt{std::sort}.
-
-  As a aside, in order to calculate the emirical quantiles of interest, it is
-  not required to sort the entirety of the data, and there are fast algorithms
-  for obtaining the $k$-th largest item in a set.  However in the interests of
-  (the programmer's) time and simplicity, I just performed a total sort.
-
 \item There wasn't a built-in matrix inverse method that leveraged the fact that
   the matrix that we are inverting is a symmetric postive-definite matrix.
   Instead, this required me to use the \texttt{solve} method for the Cholesky
@@ -492,14 +482,15 @@ There were a few differences, however.
 The source code can be compiled as follows.
 <<compiling-eigen, engine="bash", eval=FALSE>>=
 g++ Bayes_LM_Eigen.cpp Parse_Args.cpp Stats_Fcns_Eigen.cpp  \
-    -DMATHLIB_STANDALONE -Wall -g3 -O3 -lRmath              \
+    -DMATHLIB_STANDALONE -I/usr/include/eigen3/             \
+    -I/usr/share/R/include -Wall -g3 -O3 -lR -lRmath        \
     -o bayes_lm_eigen
 @
 
 \noindent All of the options here have been previously discussed in section
 \ref{sec: compiling with arma}.  It is worth noting however, that for
 \eigen/ (as apposed to \arma/) we do not link it against a shared
-library, instead it is statically linked as part of the compilation process.
+library; instead it is statically linked as part of the compilation process.
 
 
 \subsection{Writing \lmrcpparma/ and \lmrcppeigen/}
